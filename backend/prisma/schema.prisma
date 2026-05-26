@@ -1,0 +1,180 @@
+// prisma/schema.prisma
+// FootStats Dashboard — Schéma PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model League {
+  id          Int
+  name        String
+  country     String
+  logo        String?
+  season      Int
+  standings   Standing[]
+  matches     Match[]
+  playerStats PlayerStat[] @relation("LeaguePlayerStats") // <- correction ajoutée
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@id([id, season])
+  @@map("leagues")
+}
+
+model Team {
+  id          Int      @id
+  name        String
+  shortName   String?
+  logo        String?
+  country     String?
+  founded     Int?
+  leagueId    Int                        // ligue principale (pas de FK vers League)
+  players     Player[]
+  homeMatches Match[]  @relation("HomeTeam")
+  awayMatches Match[]  @relation("AwayTeam")
+  standings   Standing[]
+  stats       TeamStat[]
+  playerStats PlayerStat[] 
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("teams")
+}
+
+model Player {
+  id          Int      @id
+  name        String
+  firstname   String?
+  lastname    String?
+  age         Int?
+  nationality String?
+  photo       String?
+  position    String?
+  teamId      Int?
+  team        Team?    @relation(fields: [teamId], references: [id])
+  stats       PlayerStat[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("players")
+}
+
+model Match {
+  id            Int          @id
+  leagueId      Int
+  leagueSeason  Int
+  league        League       @relation(fields: [leagueId, leagueSeason], references: [id, season])
+  season        Int
+  round         String?
+  date          DateTime?
+  status        MatchStatus  @default(NOT_STARTED)
+  homeTeamId    Int
+  homeTeam      Team         @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId    Int
+  awayTeam      Team         @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeGoals     Int?
+  awayGoals     Int?
+  winner        String?
+  elapsed       Int?
+  venue         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@map("matches")
+}
+
+enum MatchStatus {
+  NOT_STARTED
+  FIRST_HALF
+  HALFTIME
+  SECOND_HALF
+  EXTRA_TIME
+  PENALTY
+  FINISHED
+  POSTPONED
+  CANCELLED
+  ABANDONED
+}
+
+model Standing {
+  id           Int      @id @default(autoincrement())
+  leagueId     Int
+  leagueSeason Int
+  league       League   @relation(fields: [leagueId, leagueSeason], references: [id, season])
+  teamId       Int
+  team         Team     @relation(fields: [teamId], references: [id])
+  rank         Int
+  points       Int
+  played       Int
+  won          Int
+  drawn        Int
+  lost         Int
+  goalsFor     Int
+  goalsAgainst Int
+  goalDiff     Int
+  form         String?
+  updatedAt    DateTime @updatedAt
+
+  @@unique([leagueId, leagueSeason, teamId])
+  @@map("standings")   // ← ajoute cette ligne pour que la table s'appelle "standings" comme avant
+}
+
+model TeamStat {
+  id               Int      @id @default(autoincrement())
+  teamId           Int
+  team             Team     @relation(fields: [teamId], references: [id])
+  season           Int
+  goalsFor         Int      @default(0)
+  goalsAgainstStat Int      @default(0)
+  avgGoalsFor      Float    @default(0)
+  avgGoalsAgainst  Float    @default(0)
+  biggestWin       String?
+  biggestLoss      String?
+  cleanSheets      Int      @default(0)
+  failedToScore    Int      @default(0)
+  wins             Int      @default(0)
+  draws            Int      @default(0)
+  losses           Int      @default(0)
+  updatedAt        DateTime @updatedAt
+
+  @@unique([teamId, season])
+  @@map("team_stats")
+}
+
+model PlayerStat {
+  id               Int      @id @default(autoincrement())
+  playerId         Int
+  player           Player   @relation(fields: [playerId], references: [id])
+  season           Int
+  teamId           Int?
+  team             Team?    @relation(fields: [teamId], references: [id])
+  leagueId         Int
+  league           League   @relation("LeaguePlayerStats", fields: [leagueId, season], references: [id, season])
+  appearances      Int      @default(0)
+  lineups          Int      @default(0)
+  minutesPlayed    Int      @default(0)
+  goals            Int      @default(0)
+  assists          Int      @default(0)
+  shots            Int      @default(0)
+  shotsOnTarget    Int      @default(0)
+  passes           Int      @default(0)
+  passAccuracy     Float?
+  dribbles         Int      @default(0)
+  dribblesSuccess  Int      @default(0)
+  tackles          Int      @default(0)
+  interceptions    Int      @default(0)
+  yellowCards      Int      @default(0)
+  redCards         Int      @default(0)
+  saves          Int      @default(0)
+  goalsConceded  Int      @default(0)
+  rating           Float?
+  updatedAt        DateTime @updatedAt
+
+  @@unique([playerId, season, leagueId])
+  @@map("player_stats")
+}
