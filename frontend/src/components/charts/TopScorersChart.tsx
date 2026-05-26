@@ -61,10 +61,10 @@ export default function TopScorersChart({ leagueId, season = 2024, limit = 10 }:
             tick={{ fill: '#94a3b8', fontSize: 12 }}
           />
           <Tooltip
-            contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8 }}
-            formatter={(value: number, name: string) => [value, name === 'goals' ? 'Buts' : 'Passes décisives']}
-            labelFormatter={(label, payload) => payload?.[0]?.payload.full ?? label}
-          />
+  contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8 }}
+  formatter={(value: number, name: string) => [value, name === 'goals' ? 'Buts' : 'Passes décisives']}
+  labelFormatter={(label: any, payload: any) => payload?.[0]?.payload.full ?? label}
+/>
           <Bar dataKey="goals" fill="#38bdf8" radius={[0, 4, 4, 0]} name="goals">
             <LabelList dataKey="goals" position="right" style={{ fill: '#38bdf8', fontSize: 12, fontWeight: 700 }} />
             {chartData.map((_: any, i: number) => (
