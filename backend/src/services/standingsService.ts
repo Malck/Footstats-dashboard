@@ -70,19 +70,19 @@ export const standingsService = {
     for (const standing of apiStandings[0]) {
       // Upsert équipe
       await prisma.team.upsert({
-        where:  { leagueId_leagueSeason_teamId: { leagueId, leagueSeason: season, teamId: standing.team.id } },
-        update: { name: standing.team.name, logo: standing.team.logo },
-        create: {
-          id:       standing.team.id,
-          name:     standing.team.name,
-          logo:     standing.team.logo,
-          leagueId: leagueId,
-        },
-      });
+  where: { id: standing.team.id },  // ← juste l'id, Team a @id sur id
+  update: { name: standing.team.name, logo: standing.team.logo },
+  create: {
+    id:       standing.team.id,
+    name:     standing.team.name,
+    logo:     standing.team.logo,
+    leagueId: leagueId,
+  },
+});
 
       // Upsert classement
       await prisma.standing.upsert({
-        where:  { leagueId_season_teamId: { leagueId, season, teamId: standing.team.id } },
+        where: { leagueId_leagueSeason_teamId: { leagueId, leagueSeason: season, teamId: standing.team.id } },
         update: {
           rank:         standing.rank,
           points:       standing.points,
