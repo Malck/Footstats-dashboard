@@ -2,11 +2,10 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL ?? '/api',
   timeout: 10_000,
   headers: { 'Content-Type': 'application/json' },
 });
-
 // ─── STANDINGS ────────────────────────────────────────────────────────────────
 export const fetchStandings = (leagueId: number, season = 2024) =>
   api.get(`/standings/${leagueId}`, { params: { season } }).then(r => r.data);
